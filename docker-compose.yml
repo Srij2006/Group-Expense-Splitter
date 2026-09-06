@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=False
+      - SECRET_KEY=your-secret-key-change-this
+      - ALLOWED_HOSTS=localhost,127.0.0.1
+      - CORS_ALLOWED_ORIGINS=http://localhost:8000
+    volumes:
+      - ./expense_splitter/Backend:/app/backend
+      - ./expense_splitter/Frontend:/app/frontend
+    command: cd backend && gunicorn expense_splitter.wsgi:application --bind 0.0.0.0:8000 --reload
