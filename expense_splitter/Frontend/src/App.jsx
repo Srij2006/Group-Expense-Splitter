@@ -31,13 +31,13 @@ function App() {
   return (
     <>
       <Routes>
-        {/* <Route path='/' element={ user? <Navigate to="/dashboard" replace/> : 
+        <Route path='/' element={ user? <Navigate to="/dashboard" replace/> : 
           <Home setuser={setuser}/>
           }/>
         <Route path='/dashboard' element={ user ? <Dashboard user={user} setuser={setuser} /> : <Navigate to="/" replace/> }/>
-        <Route path='/groups' element={ user ? <Groups user={user} setuser={setuser} /> : <Navigate to="/" replace/> }/> */}
-        <Route path='/groups' element=<Groups/> ></Route>
-        <Route path='/dashboard' element=<Dashboard/> ></Route>
+        <Route path='/groups' element={ user ? <Groups user={user} setuser={setuser} /> : <Navigate to="/" replace/> }/>
+        {/* <Route path='/groups' element=<Groups/> ></Route>
+        <Route path='/dashboard' element=<Dashboard/> ></Route> */}
       </Routes>
     </>
   )
