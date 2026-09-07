@@ -43,7 +43,7 @@ function Dashboard({ user, setuser }) {
   useEffect(() => {
     const fetchDashboard = async () => {
       try {
-        const response = await api.get("/api/expense/dashboard")
+        const response = await api.get("/dashboard")
         setStats(response.data.stats)
         setChartData(response.data.chartData)
       } catch (error) {
@@ -56,7 +56,7 @@ function Dashboard({ user, setuser }) {
 
   const handleLogout = async () => {
     try {
-      const response = await api.get("/api/auth/logout")
+      const response = await api.get("/logout/")
 
       if (response.data.success) {
         setuser(null)
@@ -124,11 +124,11 @@ function Dashboard({ user, setuser }) {
 
         <div className={`flex items-center gap-2 pt-3 border-t border-black/8 ${sidebarOpen ? "px-2" : "justify-center"}`}>
           <div className='w-8 h-8 rounded-full bg-black/10 flex items-center justify-center text-xs font-bold text-black/60 shrink-0'>
-            {user?.name?.[0]?.toUpperCase() || "U"}
+            {user?.username?.[0]?.toUpperCase() || "U"}
           </div>
           {sidebarOpen && (
             <div className='flex-1 min-w-0'>
-              <p className='text-xs font-semibold text-[#0A0A0A] truncate'>{user?.name}</p>
+              <p className='text-xs font-semibold text-[#0A0A0A] truncate'>{user?.username}</p>
             </div>
           )}
           <motion.button
@@ -204,10 +204,10 @@ function Dashboard({ user, setuser }) {
 
               <div className='flex items-center gap-2 pt-3 px-2 border-t border-black/8'>
                 <div className='w-8 h-8 rounded-full bg-black/10 flex items-center justify-center text-xs font-bold text-black/60'>
-                  {user?.name?.[0]?.toUpperCase() || "U"}
+                  {user?.username?.[0]?.toUpperCase() || "U"}
                 </div>
                 <div className='flex-1 min-w-0'>
-                  <p className='text-xs font-semibold text-[#0A0A0A] truncate'>{user?.name}</p>
+                  <p className='text-xs font-semibold text-[#0A0A0A] truncate'>{user?.username}</p>
                 </div>
                 <button onClick={handleLogout} className='text-black/40 hover:text-red-500'>
                   <FiLogOut size={15} />
@@ -240,7 +240,7 @@ function Dashboard({ user, setuser }) {
               transition={{ duration: 0.4 }}
             >
               <p className='text-black/40 text-[11px] md:text-xs font-medium mb-0.5'>Overview</p>
-              <h2 className='text-lg md:text-xl font-bold text-[#0A0A0A]'>Hello, {user?.name?.split(" ")[0]} 👋 </h2>
+              <h2 className='text-lg md:text-xl font-bold text-[#0A0A0A]'>Hello, {user?.username} 👋 </h2>
             </motion.div>
           </div>
         </div>

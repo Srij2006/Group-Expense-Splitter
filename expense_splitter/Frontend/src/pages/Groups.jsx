@@ -26,9 +26,10 @@ function Groups({ user, setuser }) {
 
   const [showCreate, setShowCreate] = useState(false)
   const [groupName, setGroupName] = useState("")
-  const [memberEmail, setMemberEmail] = useState("")
-  const [memberEmails, setMemberEmails] = useState([])
+  const [memberUsername, setMemberUsername] = useState("")
+  const [memberUsernames, setMemberUsernames] = useState([])
   const [creating, setCreating] = useState(false)
+  const [createError, setCreateError] = useState("")
 
   const navigate = useNavigate()
 
@@ -49,7 +50,7 @@ function Groups({ user, setuser }) {
 
   const handleLogout = async () => {
     try {
-      const response = await api.get("/api/auth/logout")
+      const response = await api.get("/logout/")
 
       if (response.data.success) {
         setuser(null)
@@ -67,39 +68,46 @@ function Groups({ user, setuser }) {
     { label: "Settle Up", icon: <FiCreditCard />, path: "/settle" },
   ]
 
-  const addMemberEmail = () => {
-    const email = memberEmail.trim()
-    if (!email) return
-    if (memberEmails.includes(email)) {
-      setMemberEmail("")
+  const addMemberUsername = () => {
+    const uname = memberUsername.trim()
+    if (!uname) return
+    if (uname === user?.username) {
+      setMemberUsername("")
       return
     }
-    setMemberEmails([...memberEmails, email])
-    setMemberEmail("")
+    if (memberUsernames.includes(uname)) {
+      setMemberUsername("")
+      return
+    }
+    setMemberUsernames([...memberUsernames, uname])
+    setMemberUsername("")
   }
 
-  const removeMemberEmail = (email) => {
-    setMemberEmails(memberEmails.filter((e) => e !== email))
+  const removeMemberUsername = (uname) => {
+    setMemberUsernames(memberUsernames.filter((u) => u !== uname))
   }
 
   const handleCreateGroup = async () => {
     if (!groupName.trim()) return
     setCreating(true)
+    setCreateError("")
     try {
       const response = await api.post("/api/groups", {
         name: groupName.trim(),
-        members: memberEmails,
+        members: memberUsernames,
       })
 
       if (response.data.success) {
         setGroups([response.data.group, ...groups])
         setShowCreate(false)
         setGroupName("")
-        setMemberEmails([])
-        setMemberEmail("")
+        setMemberUsernames([])
+        setMemberUsername("")
       }
     } catch (error) {
-      console.log(error)
+      setCreateError(
+        error?.response?.data?.error || "Couldn't create the group, try again"
+      )
     } finally {
       setCreating(false)
     }
@@ -147,8 +155,8 @@ function Groups({ user, setuser }) {
               whileHover={{ x: sidebarOpen ? 2 : 0 }}
               onClick={() => navigate(item.path)}
               className={`flex items-center gap-3 rounded-lg py-2.5 text-sm font-medium transition-all ${item.path === "/groups"
-                  ? "bg-black/8 text-[#0A0A0A]"
-                  : "text-black/55 hover:text-[#0A0A0A] hover:bg-black/5"
+                ? "bg-black/8 text-[#0A0A0A]"
+                : "text-black/55 hover:text-[#0A0A0A] hover:bg-black/5"
                 } ${sidebarOpen ? "px-3" : "justify-center px-0"}`}
             >
               <span className='text-base'>{item.icon}</span>
@@ -159,11 +167,11 @@ function Groups({ user, setuser }) {
 
         <div className={`flex items-center gap-2 pt-3 border-t border-black/8 ${sidebarOpen ? "px-2" : "justify-center"}`}>
           <div className='w-8 h-8 rounded-full bg-black/10 flex items-center justify-center text-xs font-bold text-black/60 shrink-0'>
-            {user?.name?.[0]?.toUpperCase() || "U"}
+            {user?.username?.[0]?.toUpperCase() || "U"}
           </div>
           {sidebarOpen && (
             <div className='flex-1 min-w-0'>
-              <p className='text-xs font-semibold text-[#0A0A0A] truncate'>{user?.name}</p>
+              <p className='text-xs font-semibold text-[#0A0A0A] truncate'>{user?.username}</p>
             </div>
           )}
           <motion.button
@@ -230,8 +238,8 @@ function Groups({ user, setuser }) {
                     key={i}
                     onClick={() => { navigate(item.path); setMoblieOpen(false) }}
                     className={`flex items-center gap-3 rounded-lg py-2.5 px-3 text-sm font-medium transition-all ${item.path === "/groups"
-                        ? "bg-black/8 text-[#0A0A0A]"
-                        : "text-black/55 hover:text-[#0A0A0A] hover:bg-black/5"
+                      ? "bg-black/8 text-[#0A0A0A]"
+                      : "text-black/55 hover:text-[#0A0A0A] hover:bg-black/5"
                       }`}
                   >
                     <span className='text-base'>{item.icon}</span>
@@ -242,10 +250,10 @@ function Groups({ user, setuser }) {
 
               <div className='flex items-center gap-2 pt-3 px-2 border-t border-black/8'>
                 <div className='w-8 h-8 rounded-full bg-black/10 flex items-center justify-center text-xs font-bold text-black/60'>
-                  {user?.name?.[0]?.toUpperCase() || "U"}
+                  {user?.username?.[0]?.toUpperCase() || "U"}
                 </div>
                 <div className='flex-1 min-w-0'>
-                  <p className='text-xs font-semibold text-[#0A0A0A] truncate'>{user?.name}</p>
+                  <p className='text-xs font-semibold text-[#0A0A0A] truncate'>{user?.username}</p>
                 </div>
                 <button onClick={handleLogout} className='text-black/40 hover:text-red-500'>
                   <FiLogOut size={15} />
@@ -329,12 +337,12 @@ function Groups({ user, setuser }) {
               const balance = group.balance ?? 0
               return (
                 <motion.button
-                  key={group._id || i}
+                  key={group.id || i}
                   initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.35, delay: i * 0.05 }}
                   whileHover={{ y: -3 }}
-                  onClick={() => navigate(`/groups/${group._id}`)}
+                  onClick={() => navigate(`/groups/${group.id}`)}
                   className='text-left bg-[#F8F9FA] border border-black/8 rounded-2xl p-4 hover:border-black/15 transition-all'
                 >
                   <div className='flex items-start justify-between mb-4'>
@@ -350,10 +358,10 @@ function Groups({ user, setuser }) {
                   </p>
 
                   <div className={`inline-flex items-center px-2 py-1 rounded-md text-[11px] font-semibold ${balance > 0
-                      ? "bg-emerald-50 text-emerald-600"
-                      : balance < 0
-                        ? "bg-red-50 text-red-500"
-                        : "bg-black/5 text-black/40"
+                    ? "bg-emerald-50 text-emerald-600"
+                    : balance < 0
+                      ? "bg-red-50 text-red-500"
+                      : "bg-black/5 text-black/40"
                     }`}>
                     {balance > 0
                       ? `You are owed ₹${balance.toLocaleString()}`
@@ -403,38 +411,42 @@ function Groups({ user, setuser }) {
                 className='w-full bg-[#F8F9FA] border border-black/8 rounded-lg px-3 py-2.5 text-xs text-[#0A0A0A] placeholder:text-black/30 focus:outline-none focus:border-black/20 mb-4 transition-colors'
               />
 
-              <label className='text-[11px] font-medium text-black/50 mb-1.5 block'>Add Members (email)</label>
+              <label className='text-[11px] font-medium text-black/50 mb-1.5 block'>Add Members (username)</label>
               <div className='flex gap-2 mb-2'>
                 <input
-                  type="email"
-                  value={memberEmail}
-                  onChange={(e) => setMemberEmail(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addMemberEmail())}
-                  placeholder="friend@email.com"
+                  type="text"
+                  value={memberUsername}
+                  onChange={(e) => setMemberUsername(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addMemberUsername())}
+                  placeholder="friend_username"
                   className='flex-1 bg-[#F8F9FA] border border-black/8 rounded-lg px-3 py-2.5 text-xs text-[#0A0A0A] placeholder:text-black/30 focus:outline-none focus:border-black/20 transition-colors'
                 />
                 <button
-                  onClick={addMemberEmail}
+                  onClick={addMemberUsername}
                   className='shrink-0 w-9 h-9 rounded-lg bg-black/5 hover:bg-black/10 flex items-center justify-center text-black/60 transition-colors'
                 >
                   <FiPlus size={15} />
                 </button>
               </div>
 
-              {memberEmails.length > 0 && (
+              {memberUsernames.length > 0 && (
                 <div className='flex flex-wrap gap-1.5 mb-4'>
-                  {memberEmails.map((email) => (
+                  {memberUsernames.map((uname) => (
                     <span
-                      key={email}
+                      key={uname}
                       className='inline-flex items-center gap-1.5 bg-black/5 text-black/60 text-[11px] font-medium px-2.5 py-1 rounded-full'
                     >
-                      {email}
-                      <button onClick={() => removeMemberEmail(email)} className='hover:text-red-500'>
+                      @{uname}
+                      <button onClick={() => removeMemberUsername(uname)} className='hover:text-red-500'>
                         <FiX size={11} />
                       </button>
                     </span>
                   ))}
                 </div>
+              )}
+
+              {createError && (
+                <p className='text-red-500 text-[11px] font-medium mb-3'>{createError}</p>
               )}
 
               <motion.button

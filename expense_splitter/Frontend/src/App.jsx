@@ -3,8 +3,8 @@ import React, { useEffect, useState } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import Home from './pages/Home'
 import Dashboard from './pages/Dashboard'
-import { getCurrentUser } from './apis/user.api'
 import Groups from './pages/Groups'
+import { getCurrentUser } from './apis/user.api'
 
 function App() {
   const [user, setuser] = useState(null)
@@ -34,9 +34,10 @@ function App() {
         {/* <Route path='/' element={ user? <Navigate to="/dashboard" replace/> : 
           <Home setuser={setuser}/>
           }/>
-        <Route path='/dashboard' element={ user ? <Dashboard user={user} setuser={setuser} /> : <Navigate to="/" replace/> }/> */}
-        <Route path='/dashboard' element=<Dashboard/> />
-        <Route path='/groups' element=<Groups/> />
+        <Route path='/dashboard' element={ user ? <Dashboard user={user} setuser={setuser} /> : <Navigate to="/" replace/> }/>
+        <Route path='/groups' element={ user ? <Groups user={user} setuser={setuser} /> : <Navigate to="/" replace/> }/> */}
+        <Route path='/groups' element=<Groups/> ></Route>
+        <Route path='/dashboard' element=<Dashboard/> ></Route>
       </Routes>
     </>
   )
