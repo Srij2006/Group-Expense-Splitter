@@ -8,7 +8,7 @@ import { getCurrentUser } from './apis/user.api'
 
 function App() {
   const [user, setuser] = useState(null)
-  const [loading, setloading] = useState(true)
+  const [loading, setloading] = useState(false)
 
   useEffect(() => {
     const getUser = async () => {
