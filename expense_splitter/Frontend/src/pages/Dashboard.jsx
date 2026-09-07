@@ -43,7 +43,7 @@ function Dashboard({ user, setuser }) {
   useEffect(() => {
     const fetchDashboard = async () => {
       try {
-        const response = await api.get("/dashboard")
+        const response = await api.get("/api/dashboard")
         setStats(response.data.stats)
         setChartData(response.data.chartData)
       } catch (error) {
@@ -56,7 +56,7 @@ function Dashboard({ user, setuser }) {
 
   const handleLogout = async () => {
     try {
-      const response = await api.get("/logout/")
+      const response = await api.post("/logout")
 
       if (response.data.success) {
         setuser(null)
@@ -99,7 +99,7 @@ function Dashboard({ user, setuser }) {
         <motion.button
           whileHover={{ scale: 1.03 }}
           whileTap={{ scale: 0.97 }}
-          onClick={() => navigate("/groups/new")}
+          onClick={() => navigate("/expenses")}
           className={`flex items-center gap-2 bg-[#0A0A0A] text-white font-semibold rounded-lg py-2.5 mb-6 shadow-[0_6px_20px_rgba(0,0,0,0.2)] transition-all ${sidebarOpen ? "px-3 justify-start" : "justify-center px-0"
             }`}
         >
@@ -183,7 +183,7 @@ function Dashboard({ user, setuser }) {
               </div>
 
               <button
-                onClick={() => { navigate("/groups/new"); setMoblieOpen(false) }}
+                onClick={() => { navigate("/expenses"); setMoblieOpen(false) }}
                 className='flex items-center gap-2 bg-[#0A0A0A] text-white font-semibold rounded-lg py-2.5 px-3 mb-6 text-xs'
               >
                 <FiPlus size={16} /> New Expense
@@ -272,7 +272,7 @@ function Dashboard({ user, setuser }) {
             <p className='text-black/40 text-[11px] font-medium mb-2'>Total Expenses</p>
             <h3 className='text-2xl font-extrabold text-[#0A0A0A] mb-1'>₹{stats?.totalExpenses?.toLocaleString?.() ?? stats?.totalExpenses}</h3>
             <p className='text-[11px] text-black/40'>
-              <span className='text-[#0A0A0A]/70 font-semibold'>All Time</span> Logged By You
+              <span className='text-[#0A0A0A]/70 font-semibold'>All Time</span> Logged By Your Groups
             </p>
           </motion.div>
 

@@ -22,13 +22,13 @@ const LoginModel = ({ onClose, setuser }) => {
 
     setLoading(true)
 
-    const formData = new FormData()
-    formData.append("username", username.trim())
-    formData.append("password", password)
-
     try {
-      const url = mode === "login" ? "/login/" : "/signup/"
-      const response = await api.post(url, formData)
+      const url = mode === "login" ? "/login" : "/signup"
+
+      const response = await api.post(url, {
+        username: username.trim(),
+        password: password
+      })
 
       if (response.data.success) {
         setuser(response.data.user)
@@ -37,8 +37,11 @@ const LoginModel = ({ onClose, setuser }) => {
         setError(response.data.error || "Something went wrong")
       }
     } catch (err) {
+      console.error(err)
+
       setError(
-        err?.response?.data?.error || "Something went wrong, please try again"
+        err?.response?.data?.error ||
+        "Something went wrong, please try again"
       )
     } finally {
       setLoading(false)

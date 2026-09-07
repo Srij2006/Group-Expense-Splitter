@@ -1,4 +1,6 @@
-# Python
+# =========================
+# Python / Django
+# =========================
 __pycache__/
 *.py[cod]
 *$py.class
@@ -7,6 +9,8 @@ __pycache__/
 env/
 venv/
 ENV/
+.venv/
+
 build/
 develop-eggs/
 dist/
@@ -23,22 +27,68 @@ wheels/
 .installed.cfg
 *.egg
 
-# IDE
+# Django
+instance/
+.webassets-cache
+media/
+staticfiles/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# =========================
+# Node / React
+# =========================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.npm/
+.yarn/
+.pnpm-store/
+
+# React / Vite build files
+dist/
+build/
+.vite/
+
+# =========================
+# Environment Variables
+# =========================
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# =========================
+# IDE / Editors
+# =========================
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
 
-# Environment
-.env
-.env.local
+# =========================
+# OS
+# =========================
 .DS_Store
+Thumbs.db
 
-# Flask
-instance/
-.webassets-cache
+# =========================
+# Coverage / Testing
+# =========================
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/
+.nox/
 
-# Database
-*.db
-*.sqlite
+# =========================
+# Logs
+# =========================
+*.log

@@ -50,7 +50,7 @@ function Groups({ user, setuser }) {
 
   const handleLogout = async () => {
     try {
-      const response = await api.get("/logout/")
+      const response = await api.post("/logout")
 
       if (response.data.success) {
         setuser(null)
@@ -342,7 +342,6 @@ function Groups({ user, setuser }) {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.35, delay: i * 0.05 }}
                   whileHover={{ y: -3 }}
-                  onClick={() => navigate(`/groups/${group.id}`)}
                   className='text-left bg-[#F8F9FA] border border-black/8 rounded-2xl p-4 hover:border-black/15 transition-all'
                 >
                   <div className='flex items-start justify-between mb-4'>

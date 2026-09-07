@@ -5,10 +5,11 @@ import Home from './pages/Home'
 import Dashboard from './pages/Dashboard'
 import Groups from './pages/Groups'
 import { getCurrentUser } from './apis/user.api'
+import Expenses from './pages/Expenses'
 
 function App() {
   const [user, setuser] = useState(null)
-  const [loading, setloading] = useState(false)
+  const [loading, setloading] = useState(true)
 
   useEffect(() => {
     const getUser = async () => {
@@ -36,8 +37,7 @@ function App() {
           }/>
         <Route path='/dashboard' element={ user ? <Dashboard user={user} setuser={setuser} /> : <Navigate to="/" replace/> }/>
         <Route path='/groups' element={ user ? <Groups user={user} setuser={setuser} /> : <Navigate to="/" replace/> }/>
-        {/* <Route path='/groups' element=<Groups/> ></Route>
-        <Route path='/dashboard' element=<Dashboard/> ></Route> */}
+        <Route path='/expenses' element={ user ? <Expenses user={user} setuser={setuser} /> : <Navigate to="/" replace/> }/>
       </Routes>
     </>
   )

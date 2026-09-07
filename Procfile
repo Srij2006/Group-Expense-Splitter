@@ -1,1 +1,0 @@
-web: cd expense_splitter/Backend && gunicorn expense_splitter.wsgi:application
