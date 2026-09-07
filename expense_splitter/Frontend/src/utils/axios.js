@@ -5,23 +5,38 @@ const api = axios.create({
     withCredentials: true
 });
 
-api.interceptors.request.use(async (config) => {
-    const method = config.method?.toLowerCase();
+let csrfToken = null;
 
-    if (["post", "put", "patch", "delete"].includes(method)) {
-        await api.get("/api/csrf");
+const initializeCsrf = async () => {
+    const response = await api.get("/api/csrf");
 
-        const csrfToken = document.cookie
-            .split("; ")
-            .find(row => row.startsWith("csrftoken="))
-            ?.split("=")[1];
+    csrfToken =
+        response.data?.csrfToken ||
+        response.headers["x-csrftoken"] ||
+        null;
+};
 
-        if (csrfToken) {
-            config.headers["X-CSRFToken"] = csrfToken;
+api.interceptors.request.use(
+    async (config) => {
+        const method = config.method?.toLowerCase();
+
+        if (
+            ["post", "put", "patch", "delete"].includes(method) &&
+            !config.url?.includes("/api/csrf")
+        ) {
+            if (!csrfToken) {
+                await initializeCsrf();
+            }
+
+            if (csrfToken) {
+                config.headers = config.headers || {};
+                config.headers["X-CSRFToken"] = csrfToken;
+            }
         }
-    }
 
-    return config;
-});
+        return config;
+    },
+    (error) => Promise.reject(error)
+);
 
 export default api;
