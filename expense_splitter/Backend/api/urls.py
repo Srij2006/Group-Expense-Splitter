@@ -11,4 +11,5 @@ urlpatterns = [
     path('api/dashboard', views.dashboard),
     path('api/groups', views.groups),
     path('api/expenses', views.expenses),
+    path('api/groups/<int:group_id>/settlements', views.group_settlements),
 ]
