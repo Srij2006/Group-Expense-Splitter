@@ -58,3 +58,19 @@ class Settlement(models.Model):
 
     def __str__(self):
         return f'{self.paid_by.username} paid {self.received_by.username} {self.amount}'
+
+
+class GroupContribution(models.Model):
+    group = models.ForeignKey(ExpenseGroup, on_delete=models.CASCADE, related_name='contributions')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='group_contributions')
+    amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['group', 'user'], name='unique_group_contribution'),
+            models.CheckConstraint(condition=models.Q(amount__gte=0), name='group_contribution_nonnegative'),
+        ]
+
+    def __str__(self):
+        return f'{self.group.name} - {self.user.username}: {self.amount}'
