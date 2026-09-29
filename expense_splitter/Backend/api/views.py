@@ -12,7 +12,7 @@ from django.middleware.csrf import get_token
 from django.utils import timezone
 from django.views.decorators.csrf import ensure_csrf_cookie, csrf_exempt
 
-from .models import Expense, ExpenseGroup, GroupMembership
+from .models import Expense, ExpenseGroup, GroupMembership, Settlement
 
 
 MONEY_ZERO = Decimal('0.00')
@@ -943,4 +943,121 @@ def expenses(request):
             },
         }
 
+    }, status=201)
+
+
+# --------------------------------------------------
+# Settlements (equal-split debt simplification)
+# --------------------------------------------------
+
+def settlement_balances(group):
+    member_ids = list(group.memberships.values_list('user_id', flat=True))
+    if not member_ids:
+        return {}
+    total = group.expenses.aggregate(total=Sum('amount'))['total'] or MONEY_ZERO
+    share = total / Decimal(len(member_ids))
+    balances = {user_id: MONEY_ZERO for user_id in member_ids}
+    paid = (
+        Expense.objects.filter(group=group)
+        .values('paid_by_id').annotate(total=Sum('amount'))
+    )
+    for row in paid:
+        balances[row['paid_by_id']] += row['total']
+    for user_id in balances:
+        balances[user_id] -= share
+    # A recorded payment reduces the payer's debt and the receiver's credit.
+    settlements = Settlement.objects.filter(group=group)
+    for item in settlements:
+        balances[item.paid_by_id] += item.amount
+        balances[item.received_by_id] -= item.amount
+    return balances
+
+
+def simplify_balances(balances):
+    debtors = [[uid, -amount] for uid, amount in balances.items() if amount < 0]
+    creditors = [[uid, amount] for uid, amount in balances.items() if amount > 0]
+    debtors.sort(key=lambda x: x[1], reverse=True)
+    creditors.sort(key=lambda x: x[1], reverse=True)
+    transfers = []
+    i = j = 0
+    while i < len(debtors) and j < len(creditors):
+        amount = min(debtors[i][1], creditors[j][1])
+        amount = money(amount)
+        if amount > MONEY_ZERO:
+            transfers.append({
+                'fromUserId': debtors[i][0],
+                'toUserId': creditors[j][0],
+                'amount': money_float(amount),
+            })
+        debtors[i][1] = money(debtors[i][1] - amount)
+        creditors[j][1] = money(creditors[j][1] - amount)
+        if debtors[i][1] == MONEY_ZERO:
+            i += 1
+        if creditors[j][1] == MONEY_ZERO:
+            j += 1
+    return transfers
+
+
+@login_required_json
+def group_settlements(request, group_id):
+    try:
+        group = ExpenseGroup.objects.get(
+            id=group_id, memberships__user=request.user
+        )
+    except ExpenseGroup.DoesNotExist:
+        return JsonResponse({'error': 'Group not found.'}, status=404)
+
+    if request.method == 'GET':
+        balances = settlement_balances(group)
+        transfers = simplify_balances(balances)
+        user_ids = {x for t in transfers for x in (t['fromUserId'], t['toUserId'])}
+        names = dict(User.objects.filter(id__in=user_ids).values_list('id', 'username'))
+        for transfer in transfers:
+            transfer['fromUsername'] = names.get(transfer['fromUserId'])
+            transfer['toUsername'] = names.get(transfer['toUserId'])
+        history = [{
+            'id': item.id,
+            'paidBy': {'id': item.paid_by_id, 'username': item.paid_by.username},
+            'receivedBy': {'id': item.received_by_id, 'username': item.received_by.username},
+            'amount': money_float(item.amount),
+            'createdAt': item.created_at.isoformat(),
+        } for item in group.settlements.select_related('paid_by', 'received_by')]
+        return JsonResponse({'suggestedTransfers': transfers, 'settlements': history})
+
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Use GET or POST.'}, status=405)
+
+    try:
+        payload = json_body(request)
+        to_user_id = int(payload.get('toUserId'))
+        amount = money(payload.get('amount'))
+    except (ValueError, TypeError, InvalidOperation):
+        return JsonResponse({'error': 'Provide a valid toUserId and amount.'}, status=400)
+
+    if amount <= MONEY_ZERO:
+        return JsonResponse({'error': 'Amount must be greater than zero.'}, status=400)
+    if to_user_id == request.user.id:
+        return JsonResponse({'error': 'You cannot settle with yourself.'}, status=400)
+    if not group.memberships.filter(user_id=to_user_id).exists():
+        return JsonResponse({'error': 'Receiver is not a group member.'}, status=400)
+
+    balances = settlement_balances(group)
+    payer_balance = balances.get(request.user.id, MONEY_ZERO)
+    receiver_balance = balances.get(to_user_id, MONEY_ZERO)
+    if payer_balance >= MONEY_ZERO or receiver_balance <= MONEY_ZERO:
+        return JsonResponse({'error': 'This payment does not match an outstanding debt.'}, status=400)
+    if amount > min(-payer_balance, receiver_balance):
+        return JsonResponse({'error': 'Amount exceeds the outstanding debt or credit.'}, status=400)
+
+    item = Settlement.objects.create(
+        group=group, paid_by=request.user,
+        received_by_id=to_user_id, amount=amount
+    )
+    return JsonResponse({
+        'success': True,
+        'settlement': {
+            'id': item.id, 'paidBy': request.user.username,
+            'receivedBy': item.received_by.username,
+            'amount': money_float(item.amount),
+        },
     }, status=201)
