@@ -6,6 +6,7 @@ import Dashboard from './pages/Dashboard'
 import Groups from './pages/Groups'
 import { getCurrentUser } from './apis/user.api'
 import Expenses from './pages/Expenses'
+import Settle from './pages/Settle'
 
 function App() {
   const [user, setuser] = useState(null)
@@ -38,6 +39,7 @@ function App() {
         <Route path='/dashboard' element={ user ? <Dashboard user={user} setuser={setuser} /> : <Navigate to="/" replace/> }/>
         <Route path='/groups' element={ user ? <Groups user={user} setuser={setuser} /> : <Navigate to="/" replace/> }/>
         <Route path='/expenses' element={ user ? <Expenses user={user} setuser={setuser} /> : <Navigate to="/" replace/> }/>
+        <Route path='/settle' element={ user ? <Settle user={user} setuser={setuser} /> : <Navigate to="/" replace/> }/>
       </Routes>
     </>
   )
