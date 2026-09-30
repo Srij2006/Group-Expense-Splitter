@@ -7,7 +7,16 @@ import api from "../utils/axios"
 const currency = (value) => Number(value || 0).toLocaleString("en-IN", { style: "currency", currency: "INR" })
 
 function Settle({ user, setuser }) {
-
+  const navigate = useNavigate()
+  const [groups, setGroups] = useState([])
+  const [groupId, setGroupId] = useState("")
+  const [members, setMembers] = useState([])
+  const [amounts, setAmounts] = useState({})
+  const [result, setResult] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState("")
+  const [notice, setNotice] = useState("")
 
   const total = useMemo(() => members.reduce((sum, member) => sum + (Number(amounts[member.userId]) || 0), 0), [members, amounts])
   const share = members.length ? total / members.length : 0
